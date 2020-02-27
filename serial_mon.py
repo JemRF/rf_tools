@@ -1,4 +1,4 @@
-#!/usr/bin/env pythonn
+#!/usr/bin/env python
 import sys
 from threading import Thread
 #from bme280 import process_bme_reading
