@@ -8,7 +8,8 @@ git clone https://github.com/JemRF/rf_tools.git
 ## Instructions to load new firmware on JemRF modules
 Be careful because this can brick your devide if performed incorrectly!
 
-### 1. Upload new firmware to JemRF Flex Module (https://www.jemrf.com/collections/rf-sensors/products/flex-rf-module)
+### 1. Upload new firmware to JemRF Flex Module 
+(https://www.jemrf.com/collections/rf-sensors/products/flex-rf-module)
 ```
 cd rf_tools/jemrf-fw
 make all
