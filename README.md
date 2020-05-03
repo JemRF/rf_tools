@@ -49,8 +49,8 @@ Erasing, programming and verifying page 6
 Replacing "X.X" with the version you want to load
 
 ### 6. Disconnect Flex from the MCU and re-attach IoT Gateway
- - Check the version of the modeul (python rf_config.py 03 VERSION)
- - Set the Type back to the oroiginal sensor type (python rf_config.py 03 TYPEX)
+ - Check the version of the module (python rf_config.py 03 VERSION)
+ - Set the Type back to the original sensor type (python rf_config.py 03 TYPEX)
  
 
 
