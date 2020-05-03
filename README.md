@@ -33,6 +33,18 @@ Pin 10 Rpi (rx) - Pin 15 Flex (tx)
 ### 5. Run the uploader
 ```
 sudo ./cctl-prog  -d /dev/ttyAMA0 -f jemrf-fwX.X.hex
+
+You should see new firmware being loaded like this:
+
+Waiting 10s for bootloader, reset board now
+...Bootloader detected
+Erasing page 1
+Erasing, programming and verifying page 2
+Erasing, programming and verifying page 3
+Erasing, programming and verifying page 4
+Erasing, programming and verifying page 5
+Erasing, programming and verifying page 6
+....
 ```
 Replacing "X.X" with the version you want to load
 
