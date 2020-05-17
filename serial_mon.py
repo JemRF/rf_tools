@@ -1,8 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 import sys
 from threading import Thread
 #from bme280 import process_bme_reading
-from rflib import rf2serial, fetch_messages
+from rflib import rf2serial, fetch_messages, request_reply
 import rflib
 from time import sleep
 import time
@@ -26,21 +26,23 @@ def inbound_message_processing():
         exit()
 
 def main():
-  rflib.init()
+  print "JemRF Serial Monitor 2.0"
+  print "Press ctrl-c to exit"
 
+  rflib.init()
+  
   #start serial processing thread
   a=Thread(target=rf2serial, args=())
   a.start()
   
-  #start response processing thread
+  request = request_reply("a01HELLO") 
+  if (request.rt==1):
+      for x in range(request.num_replies):
+          print str(request.id[x]) + str(request.message[x])
+
+  #now start processing thread
   b=Thread(target=inbound_message_processing, args=())
   b.start()
-
-  #Use this to inject some test messages
-  #rflib.message_queue.insert(len(rflib.message_queue),("10", "AWAKE"))
-  #rflib.message_queue.insert(len(rflib.message_queue),("10", "TMP20"))
-  #rflib.message_queue.insert(len(rflib.message_queue),("10", "TMP21"))
-  #rflib.message_queue.insert(len(rflib.message_queue),("10", "SLEEP"))
 
   while not rflib.event.is_set():
       try:
