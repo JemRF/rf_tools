@@ -30,18 +30,18 @@ from Adafruit_IO import Client, Feed, RequestError
 # Set to your Adafruit IO key.
 # Remember, your key is a secret,
 # so make sure not to publish it when you publish this code!
-ADAFRUIT_IO_KEY = ''
+ADAFRUIT_IO_KEY = '7a75582fdd0f5e110cce66e36eec1124728e36e8'
 
 # Set to your Adafruit IO username.
 # (go to https://accounts.adafruit.com to find your username)
-ADAFRUIT_IO_USERNAME = ''
+ADAFRUIT_IO_USERNAME = 'gadjetnut'
 
 # Create an instance of the REST client
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 
 #Configurations===============
 DEBUG = True
-Fahrenheit = False
+Fahrenheit = True
 device_prefix = "rf"
 #=============================
 
@@ -49,19 +49,13 @@ def dprint(message):
   if (DEBUG):
     print message
 
-def ProcessMessageThread(value, DevId, property):
-  try:
-      thread.start_new_thread(ProcessMessage, (value, DevId, property ) )
-  except:
-      print "Error: unable to start thread"
-
 def AdafruiIO(device_id, value, property):
   feed_name=str(device_id.lower())+str(property.lower())
   dprint("Processing data : Feed="+feed_name+",Value="+str(value))
   try: 
       sensor = aio.feeds(feed_name)
   except RequestError: # create a analog feed
-      print("Creating new feed")
+      dprint("Creating new feed")
       feed = Feed(name=feed_name)
       sensor = aio.create_feed(feed)
 
@@ -95,7 +89,7 @@ def queue_processing():
         message = getMessage();         
         if message.sensordata <> "":
             dprint(time.strftime("%c")+ " " + message.devID+message.data)
-            ProcessMessage(message.sensordata, message.devID, message.description)
+            ProcessMessage(float(str(message.sensordata)), message.devID, message.description)
     sleep(0.2)
     if rflib.event.is_set():
           break
