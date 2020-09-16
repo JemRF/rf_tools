@@ -22,7 +22,6 @@ from threading import Thread
 from time import sleep
 from rflib import rf2serial
 from rflib import fetch_messages
-from rflib import automation
 from rflib import getMessage
 import rflib
 from Adafruit_IO import Client, Feed, RequestError
@@ -105,8 +104,6 @@ def main():
   
     while not rflib.event.is_set():
       try:
-          if rflib.timer<>0:
-            automation(0,0)
           sleep(1)
       except KeyboardInterrupt:
           rflib.event.set()
