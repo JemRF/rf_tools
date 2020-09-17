@@ -93,7 +93,7 @@ import blynklib
 global blynk
 
 #Once you have signed up for the Bylmk App you will receive a token which you insert here
-BLYNK_AUTH = 'm93S-6OkOIxnejyDKm3sHp47JFeUIF9F'
+BLYNK_AUTH = ''
 
 #================================================================================================
 DEBUG = True
@@ -192,7 +192,6 @@ def main():
     while not rflib.event.is_set():
       try:
           blynk.run()
-          sleep(1)
       except KeyboardInterrupt:
           rflib.event.set()
           break
