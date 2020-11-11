@@ -62,7 +62,7 @@ def rf2serial():
         rf_event.clear()
         if event.is_set():
           break
-        sleep(0.1)
+        sleep(0.01)
         
   except Exception as e: 
       template = "An exception of type {0} occurred. Arguments:\n{1!r}"
