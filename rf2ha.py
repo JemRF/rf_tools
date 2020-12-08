@@ -80,6 +80,8 @@ mqtt_server = "127.0.0.1"
 
 #Configurations===============
 DEBUG = True
+retries = 4 #The number of times to retry if no response received from the remote relay switch
+action = ""
 #=============================
 
 def dprint(message):
@@ -101,42 +103,15 @@ def queue_processing():
           break
 
 def on_message(mosq, obj, msg):
+    global action
     print str(msg.payload)
     j=json.loads(msg.payload)
-    resend=0
-    if j["state"]=="ON":
-        while (resend<4):
-            rflib.transmission_queue.insert(0,"a05RELAYAON-") #transmit a message
-            sleep(0.5)
-            request=rflib.request_reply("a05RELAYA")
-            if (request.rt==1):
-              for x in range(request.num_replies):
-                  print "RECEIVED : " + str(request.id[x]) + str(request.message[x])
-                  if str(request.id[x]) + str(request.message[x]) == "05RELAYAON-":
-                      mosq.publish("lights/christmas", "ON")
-                      resend=99
-                  else:
-                      resend=resend+1
-            else:
-                resend=resend+1
-
-    if j["state"]=="OFF":
-        while (resend<4):
-            rflib.transmission_queue.insert(0,"a05RELAYAOFF") #transmit a message
-            sleep(1)
-            request=rflib.request_reply("a05RELAYA")
-            if (request.rt==1):
-              for x in range(request.num_replies):
-                  print "RECEIVED : " + str(request.id[x]) + str(request.message[x])
-                  if str(request.id[x]) + str(request.message[x]) == "05RELAYAOFF":
-                      mosq.publish("lights/christmas", "OFF")
-                      resend=99
-                  else:
-                      resend=resend+1
-            else:
-                resend=resend+1
+    if j["state"]=="ON" or j["state"]=="OFF":
+        action = str(j["state"])
 
 def mqtt_loop():
+    global action
+    global retries
     mqttc = paho.Client("rf2ha_client")
     mqttc.on_message = on_message
     mqttc.connect(mqtt_server, 1883, 60)
@@ -144,6 +119,29 @@ def mqtt_loop():
    
     while (True):
         mqttc.loop()
+        if (action!=""):
+            mqttc.publish("lights/christmas", action)  #send pre-emptive status
+            resend=0
+            while (resend<retries):
+                rflib.transmission_queue.insert(0,"a05RELAYA"+action) #transmit a message
+                sleep(1)
+                request=rflib.request_reply("a05RELAYA")
+                if (request.rt==1):
+                  for x in range(request.num_replies):
+                      print "RECEIVED : " + str(request.id[x]) + str(request.message[x])
+                      if str(request.id[x]) + str(request.message[x]).strip("-") == "05RELAYA"+action:
+                          resend=99
+                      else:
+                          resend=resend+1
+                else:
+                    resend=resend+1
+            if (resend>=retries and resend<99):
+                if (action=="ON"):
+                    mqttc.publish("lights/christmas", "OFF") # set the state back to `off` because the transmission was unsuccessful
+                if (action=="OFF"):
+                    mqttc.publish("lights/christmas", "ON") # set the state back to `on` because the transmission was unsuccessful
+            action=""
+            
         if rflib.event.is_set():
             break
             
