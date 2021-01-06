@@ -56,7 +56,7 @@ def rf2serial():
               start_time = time.time()
               message_queue.insert(len(message_queue),(llapMsg[t+1:t+3], llapMsg[t+3:t+12]))
               llapMsg=""
-        #Process outgoing messages (RF tramissions)
+        #Process outgoing messages (RF transmissions)
         if len(transmission_queue)>0:
           ser.write(transmission_queue.pop())
         rf_event.clear()
@@ -81,14 +81,12 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
     x=0
     while rf_event.is_set() and not event.is_set():
         sleep(0.1)
-    
     if len(message_queue)==0:
         return
     
     sleep(0.3)
     #take a snap shot of the queue because items can be added after sort 
     temp_queue=message_queue[:]
-    
     #check for BME sensor data
     found_bme_data=False
     for y in temp_queue:
@@ -107,7 +105,6 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
         if RFDebug:
             print_debug(message_queue[0])
         message_queue.pop(0)
-    
     #sort the queue by ID
     x=0;
     temp_queue = sorted(temp_queue, key = lambda x: (x[0]))
@@ -155,7 +152,6 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
                 bme_data=""
             else:
                 y=y+1
-
     #add all items from the temp_queue to the processing queue
     for x in temp_queue:
         processing_queue.insert(len(processing_queue),x)
@@ -253,6 +249,24 @@ class getMessage_class:
               self.PEPFunction=22
               self.type=9
               self.description="BATT"
+
+          if data.startswith('RELAYA'):
+              self.sensordata=data[6:].strip('-')
+              self.PEPFunction=0
+              self.type=11
+              self.description="RELAYA"
+
+          if data.startswith('RELAYB'):
+              self.sensordata=data[6:].strip('-')
+              self.PEPFunction=0
+              self.type=12
+              self.description="RELAYA"
+
+          if data.startswith('HELLO'):
+              self.sensordata="HELLO"
+              self.PEPFunction=0
+              self.type=13
+              self.description="HELLO"
               
 def getMessage():
     return(getMessage_class())
