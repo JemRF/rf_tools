@@ -27,13 +27,13 @@ def automation(value, devID):
   if devID=="82" and value==1:
       transmission_queue.insert(0,"a56RELAYAON-") #transmit a message
       timer = time.time() #sets the timer
-      print "Automation 1 triggered" 
-  
+      print "Automation 1 triggered"
+
   if (time.time() - timer > 60 and timer<>0): #if more than 60 seconds has passed since timer was set
       transmission_queue.insert(0,"a56RELAYAOFF-") #transmit a message
       timer=0 #diable the timer
-      print "Automation 2 triggered" 
- 
+      print "Automation 2 triggered"
+
 def rf2serial():
   global message_queue
   global transmission_queue
@@ -41,7 +41,7 @@ def rf2serial():
   global event
 
   try:
-    port = '/dev/ttyAMA0'
+    port = '/dev/serial0'
     baud = 9600
     ser = serial.Serial(port=port, baudrate=baud)
     llapMsg=""
@@ -63,29 +63,29 @@ def rf2serial():
         if event.is_set():
           break
         sleep(0.01)
-        
-  except Exception as e: 
+
+  except Exception as e:
       template = "An exception of type {0} occurred. Arguments:\n{1!r}"
       message = template.format(type(e).__name__, e.args)
       print message
       print e
       event.set()
       exit()
-      
+
 def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data messages to llap message format
     global message_queue
     global rf_event
     global event
     global RFDebug
-    
+
     x=0
     while rf_event.is_set() and not event.is_set():
         sleep(0.1)
     if len(message_queue)==0:
         return
-    
+
     sleep(0.3)
-    #take a snap shot of the queue because items can be added after sort 
+    #take a snap shot of the queue because items can be added after sort
     temp_queue=message_queue[:]
     #check for BME sensor data
     found_bme_data=False
@@ -93,13 +93,13 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
         if y[1].startswith('BMP'):
             found_bme_data=True
             remove_dup_ind=True
-        
+
     if found_bme_data:
         sleep(0.7)
         while (rf_event.set()): # allow all BME data to arrive
             sleep(0.2)
         temp_queue=message_queue[:] # take another snap shot of the queue
-    
+
     #remove the items from the queue
     for x in range(0, len(temp_queue)):
         if RFDebug:
@@ -108,11 +108,11 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
     #sort the queue by ID
     x=0;
     temp_queue = sorted(temp_queue, key = lambda x: (x[0]))
-        
+
     #remove duplicates
     if (remove_dup_ind):
-        x=0    
-        while x<len(temp_queue)-1:   
+        x=0
+        while x<len(temp_queue)-1:
             if temp_queue[x][0]==temp_queue[x+1][0] and \
                temp_queue[x][1]==temp_queue[x+1][1]:
                 temp_queue.pop(x)
@@ -155,16 +155,16 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
     #add all items from the temp_queue to the processing queue
     for x in temp_queue:
         processing_queue.insert(len(processing_queue),x)
-    
+
 def print_debug(message):
     print message
     for x in range(0, len(message[1])):
         print(message[1][x],ord(message[1][x]))
 
-class getMessage_class: 
-  def __init__(self): 
+class getMessage_class:
+  def __init__(self):
       self.sensordata=""
-      
+
       fetch_messages(1);
       if len(processing_queue)>0:
           message = processing_queue.pop(0)
@@ -201,7 +201,7 @@ class getMessage_class:
               self.PEPFunction=37
               self.type=3
               self.description="TMPA"
-          
+
           if data.startswith('ANAA'):
               sdata=str(data[4:].rstrip("-"))
               sdata=(float(sdata)-1470)/16 #convert it to a reading between 1(light) and 48 (dark)
@@ -210,40 +210,40 @@ class getMessage_class:
               self.PEPFunction=37
               self.type=4
               self.description="ANAA"
-          
+
           if data.startswith('ANAB'):
-              sdata=str(data[4:].rstrip("-"))	
+              sdata=str(data[4:].rstrip("-"))
               sdata=(float(sdata)-1470)/16 #convert it to a reading between 1(light) and 48 (dark)
               self.sensordata=str(sdata)
               self.PEPFunction=37
               self.type=10
               self.description="ANAB"
- 
-          
+
+
           if data.startswith('TMPC'):
               self.sensordata=str(data[4:].rstrip("-"))
               self.PEPFunction=37
               self.type=6
               self.description="TMPC"
-          
-          if data.startswith('TMPB'): 
+
+          if data.startswith('TMPB'):
               self.sensordata=str(data[4:].rstrip("-"))
               self.PEPFunction=37
               self.type=5
               self.description="TMPB"
-                                 
+
           if data.startswith('HUM'):
-              self.sensordata=str(data[3:].rstrip("-"))								
+              self.sensordata=str(data[3:].rstrip("-"))
               self.PEPFunction=37
               self.type=7
               self.description="HUM"
-          
+
           if data.startswith('PA'):
-              self.sensordata=str(data[2:].rstrip("-"))								
+              self.sensordata=str(data[2:].rstrip("-"))
               self.PEPFunction=37
               self.type=8
               self.description="PA"
-                  
+
           if data.startswith('BATT'):
               self.sensordata=data[4:].strip('-')
               self.PEPFunction=22
@@ -267,12 +267,12 @@ class getMessage_class:
               self.PEPFunction=0
               self.type=13
               self.description="HELLO"
-              
+
 def getMessage():
     return(getMessage_class())
-  
-class requestReply_class: 
-    def __init__(self, command): 
+
+class requestReply_class:
+    def __init__(self, command):
         self.rt=False
         self.id = []
         self.message = []
@@ -286,18 +286,17 @@ class requestReply_class:
             if (time.time() - sent_time > 1.5): #resend after 1.5 seconds if no reply
                 transmission_queue.insert(0,command) #re-transmit the message
                 sent_time = time.time()
-            fetch_messages(0) 
+            fetch_messages(0)
             while (len(processing_queue)): # we have some messages in the queue
-                message = processing_queue.pop(0)          
-                if message[0]==command[1:3]: #check the ID 
+                message = processing_queue.pop(0)
+                if message[0]==command[1:3]: #check the ID
                     self.id.insert(len(self.id),message[0])
                     self.message.insert(len(self.message),message[1])
                     self.rt=True
                     self.num_replies=self.num_replies+1
             sleep(0.1)
-    
+
 def request_reply(command):
     return(requestReply_class(command))
-          
-            
-                
+
+
