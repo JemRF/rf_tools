@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Converted to support python 2 or 3
 import sys
 from threading import Thread
 #from bme280 import process_bme_reading
@@ -20,26 +21,26 @@ def main():
         command=sys.argv[1]
       else:
         command='a'+sys.argv[1]+sys.argv[2]
-        
-      print "SENT     : "+command[1:12]  
-      request=request_reply(command) 
+
+      print ("SENT     : "+command[1:12] )
+      request=request_reply(command)
       if (request.rt==1):
           for x in range(request.num_replies):
-              print "RECEIVED : " + str(request.id[x]) + str(request.message[x])
+              print ("RECEIVED : " + str(request.id[x]) + str(request.message[x]))
       else:
-          print "NO REPLY"
-    
+          print ("NO REPLY")
+
   except KeyboardInterrupt:
       rflib.event.set()  #exit
 
 if __name__ == "__main__":
     try:
       main()
-    except Exception as e: 
+    except Exception as e:
       template = "An exception of type {0} occurred. Arguments:\n{1!r}"
       message = template.format(type(e).__name__, e.args)
-      print message
-      print e
+      print (message)
+      print (e)
       rflib.event.set()
     finally:
       rflib.event.set()

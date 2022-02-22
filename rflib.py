@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#Updated to support python 2 or 3
 import serial
 from time import sleep
 import time
@@ -27,12 +28,12 @@ def automation(value, devID):
   if devID=="82" and value==1:
       transmission_queue.insert(0,"a56RELAYAON-") #transmit a message
       timer = time.time() #sets the timer
-      print "Automation 1 triggered"
+      print ("Automation 1 triggered")
 
-  if (time.time() - timer > 60 and timer<>0): #if more than 60 seconds has passed since timer was set
+  if (time.time() - timer > 60 and timer != 0): #if more than 60 seconds has passed since timer was set
       transmission_queue.insert(0,"a56RELAYAOFF-") #transmit a message
       timer=0 #diable the timer
-      print "Automation 2 triggered"
+      print ("Automation 2 triggered")
 
 def rf2serial():
   global message_queue
@@ -49,7 +50,8 @@ def rf2serial():
         # wait for a moment before doing anything else
         while ser.inWaiting():
           rf_event.set()
-          llapMsg += ser.read()
+          nextbyte = ser.read()
+          llapMsg += nextbyte.decode()  #python 3
           # check we have the start of a LLAP message
           t=llapMsg.find('a');
           if (t>=0 and len(llapMsg)-t>=12): # we have an llap message
@@ -58,7 +60,8 @@ def rf2serial():
               llapMsg=""
         #Process outgoing messages (RF transmissions)
         if len(transmission_queue)>0:
-          ser.write(transmission_queue.pop())
+          sendata = transmission_queue.pop()
+          ser.write(sendata.encode())
         rf_event.clear()
         if event.is_set():
           break
@@ -67,8 +70,8 @@ def rf2serial():
   except Exception as e:
       template = "An exception of type {0} occurred. Arguments:\n{1!r}"
       message = template.format(type(e).__name__, e.args)
-      print message
-      print e
+      print (message)
+      print (e)
       event.set()
       exit()
 
@@ -142,7 +145,7 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
                 if bme_messages==5:
                     bme280=process_bme_reading(bme_data, devID)
                     if (bme280.temp_rt and bme280.hum_rt and bme280.press_rt):
-                      if bme280.error <> "":
+                      if bme280.error != "":
                           dprint(bme280.error)
                       else:
                           processing_queue.insert(len(processing_queue), (devID, "TMPA"+str(round(bme280.temp,2))))
@@ -157,7 +160,7 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
         processing_queue.insert(len(processing_queue),x)
 
 def print_debug(message):
-    print message
+    print (message)
     for x in range(0, len(message[1])):
         print(message[1][x],ord(message[1][x]))
 
