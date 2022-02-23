@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #Updated to support Python 3
 """
-rf2adafruitio.py v1 Serial to AdafruitIO
+rf2adafruitio.py v2 Serial to AdafruitIO
 ---------------------------------------------------------------------------------
 
  J. Evans September 2020
@@ -14,7 +14,7 @@ rf2adafruitio.py v1 Serial to AdafruitIO
 
  Revision History
  V1.00 - Release
-
+ v2.00 - Updatte for Python 3
 """
 
 import time

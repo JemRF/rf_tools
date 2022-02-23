@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-rf2ha.py v1 Remote control example using Home Assistant to automatically control Christmas lights
+rf2ha.py v3 Remote control example using Home Assistant to automatically control Christmas lights
 
  - Set up an automation in Home Assistance to switch lights on/off depending on daylight
  - Switch lights on/off from the dashboard
@@ -17,6 +17,7 @@ rf2ha.py v1 Remote control example using Home Assistant to automatically control
 
  Revision History
  V1.00 - Release
+ V3.00 - Updated for Python 3
 
  Instructions:
  =============
@@ -104,7 +105,7 @@ def queue_processing():
 
 def on_message(mosq, obj, msg):
     global action
-    print str(msg.payload)
+    print(str(msg.payload))
     j=json.loads(msg.payload)
     if j["state"]=="ON" or j["state"]=="OFF":
         action = str(j["state"])
@@ -128,7 +129,7 @@ def mqtt_loop():
                 request=rflib.request_reply("a05RELAYA")
                 if (request.rt==1):
                   for x in range(request.num_replies):
-                      print ("RECEIVED : " + str(request.id[x]) + str(request.message[x]))
+                      print("RECEIVED : " + str(request.id[x]) + str(request.message[x]))
                       if str(request.id[x]) + str(request.message[x]).strip("-") == "05RELAYA"+action:
                           resend=99
                       else:

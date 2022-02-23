@@ -22,11 +22,11 @@ def main():
       else:
         command='a'+sys.argv[1]+sys.argv[2]
 
-      print ("SENT     : "+command[1:12] )
+      print("SENT     : "+command[1:12] )
       request=request_reply(command)
       if (request.rt==1):
           for x in range(request.num_replies):
-              print ("RECEIVED : " + str(request.id[x]) + str(request.message[x]))
+              print("RECEIVED : " + str(request.id[x]) + str(request.message[x]))
       else:
           print ("NO REPLY")
 

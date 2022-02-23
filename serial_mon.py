@@ -15,7 +15,7 @@ def inbound_message_processing():
         fetch_messages(0);
         while len(rflib.processing_queue)>0:
             message = rflib.processing_queue.pop(0)
-            print (time.strftime("%c")+" "+message[0]+" "+message[1])
+            print(time.strftime("%c")+" "+message[0]+" "+message[1])
         if rflib.event.is_set():
             break
   except Exception as e:
@@ -39,7 +39,7 @@ def main():
   request = request_reply("a01HELLO")
   if (request.rt==1):
       for x in range(request.num_replies):
-        print (str(request.id[x]) + str(request.message[x]))
+        print(str(request.id[x]) + str(request.message[x]))
 
   #now start processing thread
   b=Thread(target=inbound_message_processing, args=())
@@ -51,7 +51,7 @@ def main():
       except KeyboardInterrupt:
           rflib.event.set()
           break
-  print (rflib.event.is_set())
+  print(rflib.event.is_set())
 
 if __name__ == "__main__":
     try:

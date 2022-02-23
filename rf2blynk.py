@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Updated for Python 3
 """
-rf2blynk.py v2 JemRF Sensor Interface to Blynk
+rf2blynk.py v3 JemRF Sensor Interface to Blynk
 ---------------------------------------------------------------------------------
  Works conjunction with host at www.Blynk.cc
  Visit https://www.jemrf.com/pages/documentation for full details
@@ -17,6 +17,7 @@ rf2blynk.py v2 JemRF Sensor Interface to Blynk
  Revision History
  V1.00 - Release
  V2.00 - Upgraded for new blyklib library
+ v3.00 - Updated for Python 3
 
  Instructions:
  =============
@@ -173,7 +174,7 @@ def queue_processing():
     fetch_messages(1);
     while len(rflib.processing_queue)>0:
         message = getMessage();
-        if message.sensordata <> "":
+        if message.sensordata != "":
             dprint(time.strftime("%c")+ " " + message.devID+message.data)
             ProcessMessage(float(str(message.sensordata)), message.devID, message.description)
     sleep(0.2)
