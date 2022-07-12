@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #Updated to support python 2 or 3
+#Updated 7/12/2022
 import serial
 from time import sleep
 import time
@@ -46,22 +47,31 @@ def rf2serial():
     baud = 9600
     ser = serial.Serial(port=port, baudrate=baud)
     llapMsg=""
+    llapMsgb = bytearray()
     while (True):
         # wait for a moment before doing anything else
         while ser.inWaiting():
           rf_event.set()
           nextbyte = ser.read()
-          llapMsg += nextbyte.decode()  #python 3
+          llapMsgb +=nextbyte
           # check we have the start of a LLAP message
-          t=llapMsg.find('a');
-          if (t>=0 and len(llapMsg)-t>=12): # we have an llap message
+          t = -1
+          if llapMsgb[0] == 97:
+             t =0
+
+          if (t>=0 and len(llapMsgb)-t>=12): # we have an llap message
               start_time = time.time()
-              message_queue.insert(len(message_queue),(llapMsg[t+1:t+3], llapMsg[t+3:t+12]))
+              message_queue.insert(len(message_queue),(llapMsgb[t+1:t+3], llapMsgb[t+3:t+12]))
               llapMsg=""
+              llapMsgb = bytearray()
+         # Test if first character was end of line
+          if nextbyte == b'\x00' and t == -1:
+             llapMsgb = bytearray()   # purge end of line
+
+
         #Process outgoing messages (RF transmissions)
         if len(transmission_queue)>0:
-          sendata = transmission_queue.pop()
-          ser.write(sendata.encode())
+          ser.write(transmission_queue.pop())
         rf_event.clear()
         if event.is_set():
           break
@@ -89,19 +99,13 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
 
     sleep(0.3)
     #take a snap shot of the queue because items can be added after sort
-    temp_queue=message_queue[:]
+    # Stack is bytearray, convert to string list for normal messages
+    temp_queuel =[]
+    temp_queue = message_queue[:]
+ #  temp_queue = temp_queueb
+
     #check for BME sensor data
     found_bme_data=False
-    for y in temp_queue:
-        if y[1].startswith('BMP'):
-            found_bme_data=True
-            remove_dup_ind=True
-
-    if found_bme_data:
-        sleep(0.7)
-        while (rf_event.set()): # allow all BME data to arrive
-            sleep(0.2)
-        temp_queue=message_queue[:] # take another snap shot of the queue
 
     #remove the items from the queue
     for x in range(0, len(temp_queue)):
@@ -121,16 +125,38 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
                 temp_queue.pop(x)
             else:
                 x=x+1
+    #check for BME sensor data
+    found_bme_data=False
+    for y in temp_queue:
+        if found_bme_data == False:
+          try:
+             newy = y[1][:5].decode()
+          except UnicodeDecodeError:
+             newy = 'xxxxxxx'
+
+          if newy.startswith('BMP'):
+            found_bme_data=True
+            remove_dup_ind=True
+
+    if found_bme_data:
+        sleep(0.7)
+        while (rf_event.set()): # allow all BME data to arrive
+            sleep(0.2)
+        temp_queue+=message_queue[:] # take another snap shot of the queue
 
     #process BME sensor data
     if found_bme_data:
+        #print("BME Device")
         y=0
         bme_messages=0
-        bme_data=""
+        bme_data=bytearray()
         while (y<len(temp_queue)):
             message = temp_queue[y]
             devID = message[0]
-            data = message[1]
+            try:
+                data = message[1][:5].decode()
+            except UnicodeDecodeError:
+                data = 'xxxxx'
             if data.startswith('BMP'):
                 for x in range (0,5):
                     if y<len(temp_queue):
@@ -142,22 +168,47 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
                             else:
                                 bme_data=bme_data+message[1][0:9]
                             bme_messages=bme_messages+1
+
                 if bme_messages==5:
-                    bme280=process_bme_reading(bme_data, devID)
+                    bme280=process_bme_reading(bme_data, devID.decode())
                     if (bme280.temp_rt and bme280.hum_rt and bme280.press_rt):
                       if bme280.error != "":
                           dprint(bme280.error)
                       else:
-                          processing_queue.insert(len(processing_queue), (devID, "TMPA"+str(round(bme280.temp,2))))
-                          processing_queue.insert(len(processing_queue), (devID, "HUM"+str(round(bme280.hum,2))))
-                          processing_queue.insert(len(processing_queue), (devID, "PA"+str(round(bme280.press/100,1))))
+                          processing_queue.insert(len(processing_queue), (devID.decode(), "TMPA"+str(round(bme280.temp,2))))
+                          processing_queue.insert(len(processing_queue), (devID.decode(), "HUM"+str(round(bme280.hum,2))))
+                          processing_queue.insert(len(processing_queue), (devID.decode(), "PA"+str(round(bme280.press/100,1))))
+
                 bme_messages=0;
                 bme_data=""
             else:
                 y=y+1
+    #           print("bmp5 ",y," pq len= ",len(processing_queue))
+    else:
+       temp_queuel =[]
+
     #add all items from the temp_queue to the processing queue
-    for x in temp_queue:
-        processing_queue.insert(len(processing_queue),x)
+
+    if len(temp_queue) == 1:
+       temp_queuel = []
+       try:
+          processing_queue.insert(0,(temp_queue[0][0].decode(),temp_queue[0][1].decode()))
+       except UnicodeDecodeError:
+           if RFDebug:
+               print("BME Rx Error")
+
+       #processing_queue.insert(len(processing_queue),temp_queuel)
+    else:
+#  Not BMP device, return normal message
+      for x in temp_queue:
+        temp_queuel=[]
+        try:
+           x[1].decode()
+           processing_queue.insert(len(processing_queue),(x[0].decode(),x[1].decode()))
+        except UnicodeDecodeError:
+           if RFDebug:
+              print("BME Rx Error")
+
 
 def print_debug(message):
     print (message)
@@ -276,23 +327,24 @@ def getMessage():
 
 class requestReply_class:
     def __init__(self, command):
+        commandu = command.encode()
         self.rt=False
         self.id = []
         self.message = []
         self.num_replies=0
-        transmission_queue.insert(0,command) #transmit a message
+        transmission_queue.insert(0,commandu) #transmit a message
         overall_time = time.time()
         sent_time = time.time()
         while (not self.rt):
             if (time.time() - overall_time > 4): #timeout after n seconds
                 return
             if (time.time() - sent_time > 1.5): #resend after 1.5 seconds if no reply
-                transmission_queue.insert(0,command) #re-transmit the message
+                transmission_queue.insert(0,commandu) #re-transmit the message
                 sent_time = time.time()
             fetch_messages(0)
             while (len(processing_queue)): # we have some messages in the queue
                 message = processing_queue.pop(0)
-                if message[0]==command[1:3]: #check the ID
+                if message[0]==commandu[1:3]: #check the ID
                     self.id.insert(len(self.id),message[0])
                     self.message.insert(len(self.message),message[1])
                     self.rt=True

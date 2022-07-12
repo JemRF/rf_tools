@@ -101,9 +101,9 @@ class bme280_class:
       self.press = p
       self.temp_rt = 1
 
-      #print time.strftime("%c") + " " + "a"+devid+"TPMA"+str(round(t,2))
-      #print time.strftime("%c") + " " + "a"+devid+"HUM"+str(round(h,2))
-      #print time.strftime("%c") + " " + "a"+devid+"PA"+str(round(p,1))
+#     print( time.strftime("%c") + " " + "a"+dev_id+"TPMA"+str(round(temp,2)))
+#     print( time.strftime("%c") + " " + "a"+dev_id+"HUM"+str(round(h,2)))
+#     print( time.strftime("%c") + " " + "a"+dev_id+"PA"+str(round(p,1)))
 
 def process_bme_reading(bme_message, devid):
   return(bme280_class(bme_message, devid))

@@ -7,6 +7,7 @@ from rflib import rf2serial, fetch_messages, request_reply
 import rflib
 from time import sleep
 import time
+import sys, os
 
 def inbound_message_processing():
   try:
@@ -27,7 +28,7 @@ def inbound_message_processing():
         exit()
 
 def main():
-  print ("JemRF Serial Monitor 2.3")
+  print ("JemRF Serial Monitor 2.3.0")
   print ("Press ctrl-c to exit")
 
   rflib.init()
@@ -35,7 +36,6 @@ def main():
   a=Thread(target=rf2serial, args=())
   a.start()
 
-  smessage = "a01HELLO"
   request = request_reply("a01HELLO")
   if (request.rt==1):
       for x in range(request.num_replies):
@@ -51,6 +51,7 @@ def main():
       except KeyboardInterrupt:
           rflib.event.set()
           break
+  print("End of Event")
   print(rflib.event.is_set())
 
 if __name__ == "__main__":
@@ -59,6 +60,9 @@ if __name__ == "__main__":
     except Exception as e:
       template = "An exception of type {0} occurred. Arguments:\n{1!r}"
       message = template.format(type(e).__name__, e.args)
+      exc_type, exc_obj, exc_tb = sys.exc_info()
+      fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+      message += exe_tb.tb_lineno
       print (message)
       print (e)
       rflib.event.set()
