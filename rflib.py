@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #Updated to support python 2 or 3
 #Updated 7/12/2022
+#Revised 7/19/2023
 import serial
 from time import sleep
 import time
@@ -153,6 +154,7 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
         while (y<len(temp_queue)):
             message = temp_queue[y]
             devID = message[0]
+            data = message[1]
             try:
                 data = message[1][:5].decode()
             except UnicodeDecodeError:
@@ -170,7 +172,7 @@ def fetch_messages(remove_dup_ind): #removed duplicates and converts binary data
                             bme_messages=bme_messages+1
 
                 if bme_messages==5:
-                    bme280=process_bme_reading(bme_data, devID.decode())
+                    bme280=process_bme_reading(bme_data, devID)
                     if (bme280.temp_rt and bme280.hum_rt and bme280.press_rt):
                       if bme280.error != "":
                           dprint(bme280.error)
@@ -344,7 +346,7 @@ class requestReply_class:
             fetch_messages(0)
             while (len(processing_queue)): # we have some messages in the queue
                 message = processing_queue.pop(0)
-                if message[0]==commandu[1:3]: #check the ID
+                if message[0]==commandu[1:3].decode(): #check the ID
                     self.id.insert(len(self.id),message[0])
                     self.message.insert(len(self.message),message[1])
                     self.rt=True
