@@ -12,7 +12,18 @@ git pull origin
 ```
 
 ## Documentation:
-https://jemrf.github.io/RF-Documentation/utilities.html
+https://documents.jemrf.com/
 
 
-
+Programs and Current Version/Date if tagged
+### Programs      Version
+* bme280.py
+* README.md
+* rf_config.py
+* rf2adafruitio.py    2
+* rf2blynk.py         3
+* rf2ha.py            3
+* rf2X.py
+* rflib.py            7/19/2023
+* rfsettings.py
+* serial_mon.py
